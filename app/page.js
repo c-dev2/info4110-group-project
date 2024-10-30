@@ -5,19 +5,38 @@ import styles from "./page.module.css";
 import { useState } from "react";
 
 export default function Home() {
-  const [files, setFiles] = useState([]);
+  const [file, setFile] = useState();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleFileUpload = (event) => {
-    const uploadedFiles = Array.from(event.target.files);
-    setFiles((prevFiles) => [...prevFiles, ...uploadedFiles]);
-    // Add logic to call AWS Lambda function to upload files to S3
-  };
+  // Function to make call to internal API route to upload file.
+  // Modified code from https://ethanmick.com/how-to-upload-a-file-in-next-js-13-app-directory/
+  const handleFileUpload = async (event) => {
+    event.preventDefault();
 
-  const handleSearch = () => {
-    const filteredFiles = files.filter(file => file.name.includes(searchQuery));
-    setFiles(filteredFiles);
-  };
+    if(!file) {
+      return;
+    }
+
+    try {
+      const data = new FormData()
+      data.set('file', file)
+
+      const res = await fetch('/api/file', {
+        method: 'POST',
+        body: data
+      })
+      // handle the error
+      if (!res.ok) throw new Error(await res.text())
+    } catch (e) {
+      // Handle errors here
+      console.error(e)
+    }
+  }
+
+  // const handleSearch = () => {
+  //   const filteredFiles = files.filter(file => file.name.includes(searchQuery));
+  //   setFiles(filteredFiles);
+  // };
 
   return (
     <div className={styles.container}>
@@ -25,8 +44,10 @@ export default function Home() {
       <section className={styles.uploadSection}>
         <h1 style={{ marginBottom: '20px' }}>Cloud Storage Application</h1>
         <p style={{ marginBottom: '25px' }}>Drag and drop files below to upload them to the cloud.</p>
-        <input type="file" multiple onChange={handleFileUpload} style={{ marginBottom: '20px' }}/>
-        <button onClick={handleFileUpload} style={{ marginBottom: '20px' }}>Upload</button>
+        <form onSubmit={handleFileUpload}>
+          <input type="file" multiple onChange={(e) => setFile(e.target.files?.[0])} style={{ marginBottom: '20px' }}/>
+          <button type="submit" style={{ marginBottom: '20px' }}>Upload</button>
+        </form>
       </section>
 
       {/* Files and Search Section */}
@@ -39,27 +60,11 @@ export default function Home() {
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{ marginRight: '10px', padding: '8px' }}
           />
-          <button onClick={handleSearch}>Search</button>
+          <button>Search</button>
         </div>
         
         <h2 style={{ marginBottom: '20px' }}>Your Files</h2>
-        {files.length > 0 ? (
-          files.map((file, index) => (
-            <div key={index} className={styles.fileItem}>
-              <Image
-                src="/file-icon.png"
-                alt="File icon"
-                width={50}
-                height={50}
-                style={{ marginRight: '10px' }}
-              />
-              <p style={{ marginRight: '10px' }}>{file.name}</p>
-              <button>Download</button>
-            </div>
-          ))
-        ) : (
-          <p style={{ marginTop: '20px' }}>No files uploaded yet.</p>
-        )}
+        <p style={{ marginTop: '20px' }}>No files uploaded yet.</p>
       </section>
 
       {/* Footer Section */}
