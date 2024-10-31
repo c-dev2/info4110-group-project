@@ -38,6 +38,14 @@ export default function Home() {
   //   setFiles(filteredFiles);
   // };
 
+const displayFiles = async () =>{
+  const res = await fetch('/api/file').then(response => response.json())
+    .then(data => {
+      console.log(data);
+      })
+    .catch(error => console.error("Error:", error));;
+    }
+
   return (
     <div className={styles.container}>
       {/* Upload Section */}
@@ -61,6 +69,7 @@ export default function Home() {
             style={{ marginRight: '10px', padding: '8px' }}
           />
           <button>Search</button>
+          <button onClick={displayFiles}>Test</button>
         </div>
         
         <h2 style={{ marginBottom: '20px' }}>Your Files</h2>
