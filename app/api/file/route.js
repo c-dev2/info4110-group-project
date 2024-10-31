@@ -29,8 +29,10 @@ export async function POST(req) {
     }
 
     const body = await file.arrayBuffer();
-
-    const response = s3.send(new PutObjectCommand({ Bucket: Bucket, Key: file.name, Body: body }));
+    const fileExt = file.name.match(/\.[a-zA-Z]*/gi)[0];
+    const remoteFilePath = fileExt.concat("/", file.name);
+    
+    const response = s3.send(new PutObjectCommand({ Bucket: Bucket, Key: remoteFilePath, Body: body }));
 
     return NextResponse.json(response);
 }
