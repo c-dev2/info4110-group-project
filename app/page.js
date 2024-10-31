@@ -11,16 +11,19 @@ export default function Home() {
   // Function to make call to internal API route to upload file.
   // Modified code from https://ethanmick.com/how-to-upload-a-file-in-next-js-13-app-directory/
   const handleFileUpload = async (event) => {
-    event.preventDefault();
+    event.preventDefault(); // Prevents default form behaviour
 
+    // If no file in form, do nothing and break from function
     if(!file) {
       return;
     }
 
     try {
+      // Creates a const to store the file the user uploads to form.
       const data = new FormData()
       data.set('file', file)
 
+      // Makes the POST request to the '/api/file/ internal API endpoint with the file as the body.
       const res = await fetch('/api/file', {
         method: 'POST',
         body: data
