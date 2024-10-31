@@ -34,3 +34,26 @@ export async function POST(req) {
 
     return NextResponse.json(response);
 }
+
+export async function GET() {
+  //listing objects in the S3 bucket
+  const response = await s3.send(new ListObjectsV2Command({ Bucket: Bucket, MaxKeys: 250 }));
+
+  //checking if there are any files in the bucket
+  if (!response.Contents || response.Contents.length === 0) {
+    return NextResponse.json({ success: true, files: [] });
+  }
+
+  //map over the response to get file details
+  const files = response.Contents.map((file) => {
+    const fileType = file.Key.split('.').pop(); // Get file extension as type
+
+    return {
+      key: file.Key,
+      type: fileType, // Using file extension as type
+    };
+  });
+  
+
+  return NextResponse.json({ success: true, files });
+}
