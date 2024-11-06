@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
     S3Client,
-    ListObjectsCommand,
+    ListObjectsV2Command,
     PutObjectCommand,
 } from "@aws-sdk/client-s3";
 
@@ -38,7 +38,7 @@ export async function POST(req) {
     // Get file extension using regex, then concatentate this file extension to the file name
     // with a "/" between them to create a file path.
     // For example, "upload.txt" would become ".txt/upload.txt" after these two lines.
-    const fileExt = file.name.match(/\.[a-zA-Z]*$/gi)[0]; // Matches any characters after a period at the end of the string.
+    const fileExt = file.name.match(/\.[a-zA-Z0-9]*$/gi)[0]; // Matches any characters after a period at the end of the string.
     const remoteFilePath = fileExt.concat("/", file.name);
     
     // Send command to upload file to bucket. Key is the file path which was created above.
