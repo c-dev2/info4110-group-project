@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import styles from "./page.module.css";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function Home() {
   const [file, setFile] = useState();
@@ -10,6 +10,7 @@ export default function Home() {
   const [filteredFiles, setFilteredFiles] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState(null);
+  const [selectedFileType, setSelectedFileType] = useState(null);
 
   // Fetch files from the API
   const fetchFiles = async () => {
@@ -55,7 +56,7 @@ export default function Home() {
     event.preventDefault(); // Prevents default form behaviour
 
     // If no file in form, do nothing and break from function
-    if(!file) {
+    if (!file) {
       return;
     }
 
@@ -99,18 +100,24 @@ export default function Home() {
     }
   };
 
-  // const handleSearch = () => {
-  //   const filteredFiles = files.filter(file => file.name.includes(searchQuery));
-  //   setFiles(filteredFiles);
-  // };
+  // Group files by type
+  const groupedFiles = filteredFiles.reduce((acc, file) => {
+    const fileType = file.type || 'Unknown'; // Handle files without a type
+    if (!acc[fileType]) {
+      acc[fileType] = [];
+    }
+    acc[fileType].push(file);
+    return acc;
+  }, {});
 
-// const displayFiles = async () =>{
-//   const res = await fetch('/api/file').then(response => response.json())
-//     .then(data => {
-//       console.log(data);
-//       })
-//     .catch(error => console.error("Error:", error));;
-//     }
+  // Filter files based on the selected type and search query
+  const displayedFiles = selectedFileType
+    ? groupedFiles[selectedFileType]?.filter((file) =>
+        file.key.toLowerCase().includes(searchQuery.toLowerCase())
+      ) || []
+    : filteredFiles.filter((file) =>
+        file.key.toLowerCase().includes(searchQuery.toLowerCase())
+      );
 
   return (
     <div className={styles.container}>
@@ -119,7 +126,12 @@ export default function Home() {
         <h1 style={{ marginBottom: '20px' }}>Cloud Storage Application</h1>
         <p style={{ marginBottom: '25px' }}>Drag and drop files below to upload them to the cloud.</p>
         <form onSubmit={handleFileUpload}>
-          <input type="file" multiple onChange={(e) => setFile(e.target.files?.[0])} style={{ marginBottom: '20px' }}/>
+          <input 
+            type="file" 
+            multiple 
+            onChange={(e) => setFile(e.target.files?.[0])} 
+            style={{ marginBottom: '20px' }} 
+          />
           <button type="submit" style={{ marginBottom: '20px' }}>Upload</button>
         </form>
       </section>
@@ -131,29 +143,59 @@ export default function Home() {
             type="text"
             placeholder="Search files by name..."
             value={searchQuery}
-            onChange={handleSearch}
+            onChange={(e) => setSearchQuery(e.target.value)}
             style={{ marginRight: '10px', padding: '8px' }}
           />
         </div>
-        
-        <h2 style={{ marginBottom: '20px' }}>Your Files</h2>
+<h2 style={{ marginBottom: '20px' }}>Your Files</h2>
         {error ? (
           <p>{error}</p>
         ) : (
-          <ul>
-            {filteredFiles.map((file) => (
-              <li key={file.key}>
-                {file.key} ({file.type}) <button onClick={() => handleDownload(file.key)}>Download</button>
-              </li>
-            ))}
-          </ul>
+          <div>
+            {/* File Type Headers */}
+            <div className={styles.fileTypeHeaders}>
+              {Object.keys(groupedFiles).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setSelectedFileType(selectedFileType === type ? null : type)}
+                  style={{
+                    textTransform: 'capitalize',
+                    margin: '10px 5px',
+                    padding: '10px',
+                    backgroundColor: selectedFileType === type ? '#d3d3d3' : '#202039',
+                    cursor: 'pointer',
+                    border: '1px solid #ccc',
+                    borderRadius: '5px',
+                    color: selectedFileType === type ? 'black' : 'white'
+                  }}
+                >
+                  {type} ({groupedFiles[type].length})
+                </button>
+              ))}
+            </div>
+
+            {/* Display Files of Selected Type */}
+            <div className={styles.selectedFilesSection} style={{ marginTop: '20px' }}>
+              {selectedFileType && (
+                <h3>{selectedFileType} Files</h3>
+              )}
+              {displayedFiles.length > 0 ? (
+                <ul style={{listStyleType: 'none'}}>
+                  {displayedFiles.map((file) => (
+                    <li key={file.key}>
+                      <br/>
+                      {file.key.slice(file.key.lastIndexOf('/')+1, file.key.length)} &emsp;
+                      <button onClick={() => handleDownload(file.key)}>Download</button><br/><br/>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No files found.</p>
+              )}
+            </div>
+          </div>
         )}
       </section>
-
-      {/* Footer Section */}
-      <footer className={styles.footer}>
-        <p>© 2024 Cloud Storage Service. All rights reserved.</p>
-      </footer>
     </div>
   );
-}
+};
