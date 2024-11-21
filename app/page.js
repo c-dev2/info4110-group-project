@@ -196,6 +196,10 @@ export default function Home() {
           </div>
         )}
       </section>
+      {/* Footer Section */}
+    <footer className={styles.footer}>
+      <p>&copy; 2024 Cloud Storage Application. All rights reserved.</p>
+    </footer>
     </div>
   );
 };
